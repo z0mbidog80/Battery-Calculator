@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery Capacity Calculator</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to ensure 'Inter' font and smooth transitions */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Dark background for a modern feel */
+            /* Flame Background Pattern */
+            background-image: url('data:image/svg+xml,%3Csvg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M49.9 28.5c-4.4-4.8-12-3.8-15.5 0-3.5 3.8-2.6 11 0 15.5 2.6 4.3 8.3 4 12 1.5l.5-.3.5.3c3.7 2.5 9.4 2.8 12-1.5 2.6-4.5 3.5-11.7 0-15.5-3.5-3.8-11.1-4.8-15.5 0z" fill="%232a0a00" opacity="0.3"%3E%3C/path%3E%3C/svg%3E');
+            background-size: 50px 50px; /* Adjust size for subtlety */
+            animation: backgroundPan 60s linear infinite; /* Slow, continuous pan */
+        }
+
+        @keyframes backgroundPan {
+            from { background-position: 0% 0%; }
+            to { background-position: 100% 100%; }
+        }
+
+        .calculator-card {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 5px 12px rgba(0, 0, 0, 0.3);
+            position: relative; /* For absolute positioning of battery icons */
+            overflow: hidden; /* Keep icons inside card bounds */
+        }
+        .result-box {
+            transition: all 0.3s ease-in-out;
+            background-color: #059669; /* Green for success/capacity */
+        }
+        .input-style {
+            background-color: #1f2937; /* Darker input background */
+            border: 1px solid #374151;
+            color: #f3f4f6;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .input-style:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+            outline: none;
+        }
+
+        /* Battery Icon Styling */
+        .battery-icon {
+            position: absolute;
+            font-size: 3rem; /* Large icons */
+            opacity: 0.1; /* Very subtle */
+            color: #f59e0b; /* Amber/Orange color */
+            pointer-events: none; /* Make them unclickable */
+            z-index: 0; /* Behind the content */
+            animation: floatAndFade 15s infinite ease-in-out; /* Animation */
+        }
+        .battery-icon.top-left { top: 10%; left: 5%; animation-delay: 0s; transform: rotate(15deg); }
+        .battery-icon.top-right { top: 15%; right: 5%; animation-delay: 3s; transform: rotate(-10deg); }
+        .battery-icon.bottom-left { bottom: 10%; left: 8%; animation-delay: 6s; transform: rotate(-20deg); }
+        .battery-icon.bottom-right { bottom: 8%; right: 10%; animation-delay: 9s; transform: rotate(5deg); }
+
+        @keyframes floatAndFade {
+            0% { transform: translateY(0px) scale(1) rotate(0deg); opacity: 0.1; }
+            50% { transform: translateY(-10px) scale(1.05) rotate(5deg); opacity: 0.15; }
+            100% { transform: translateY(0px) scale(1) rotate(0deg); opacity: 0.1; }
+        }
+    </style>
+    <!-- FontAwesome for icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative">
+
+    <div class="calculator-card bg-gray-800 p-8 sm:p-10 rounded-xl max-w-sm w-full text-white z-10">
+        <!-- Impulse Engineering Ltd Logo Placeholder -->
+        <div class="mb-6 py-2 border-b border-gray-700">
+            <!-- REPLACE THE H2 BELOW WITH YOUR BASE64 OR SVG LOGO -->
+            <h2 class="text-xl font-bold text-center text-amber-500">Impulse Engineering Ltd</h2>
+            <p class="text-sm text-center text-gray-500">Battery Calculator</p>
+        </div>
+        
+        <!-- Battery Icons (positioned within the card for visual effect) --><i class="fas fa-battery-full battery-icon top-left"></i>
+        <i class="fas fa-battery-half battery-icon top-right"></i>
+        <i class="fas fa-battery-quarter battery-icon bottom-left"></i>
+        <i class="fas fa-bolt battery-icon bottom-right"></i>
+
+
+        <h1 class="text-3xl font-bold mb-6 text-center text-green-400">Battery Capacity Calculator</h1>
+        <p class="text-sm text-gray-400 mb-8 text-center">Calculates required capacity.</p>
+
+        <!-- I1: Standby Current (mA) --><div class="mb-5">
+            <label for="quiescent_current" class="block text-sm font-medium mb-2 text-gray-300">Standby Current in mA:</label>
+            <input type="number" id="quiescent_current" placeholder="e.g., 50 (mA)"
+                   class="w-full input-style" min="0" step="any" required value="50">
+        </div>
+
+        <!-- T1: Standby Time (Hours) --><div class="mb-5">
+            <label for="standby_time" class="block text-sm font-medium mb-2 text-gray-300">Standby Time in Hours:</label>
+            <input type="number" id="standby_time" placeholder="e.g., 24 (hours)"
+                   class="w-full input-style" min="1" step="any" required value="24">
+        </div>
+
+        <!-- I2: Alarm Current (mA) --><div class="mb-5">
+            <label for="alarm_current" class="block text-sm font-medium mb-2 text-gray-300">Alarm Current in mA:</label>
+            <input type="number" id="alarm_current" placeholder="e.g., 1500 (mA)"
+                   class="w-full input-style" min="0" step="any" required value="1500">
+        </div>
+
+        <!-- T2: Alarm Time (Hours) --><div class="mb-8">
+            <label for="alarm_time" class="block text-sm font-medium mb-2 text-gray-300">Alarm Time in Hours:</label>
+            <input type="number" id="alarm_time" placeholder="e.g., 0.5 (hours)"
+                   class="w-full input-style" min="0" step="0.1" required value="0.5">
+        </div>
+        
+        <!-- D: Derating Factor --><div class="mb-8">
+            <label for="derating_factor" class="block text-sm font-medium mb-2 text-gray-300">High-Load Derating Factor:</label>
+            <input type="number" id="derating_factor" placeholder="e.g., 1.75"
+                   class="w-full input-style" min="0.1" step="0.01" value="1.75">
+        </div>
+
+        <!-- Calculate Button --><button id="calculateBtn"
+                class="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-semibold text-xl rounded-lg transition duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50">
+            Calculate Capacity
+        </button>
+
+        <!-- Result Display --><div id="resultContainer" class="mt-8 pt-6 border-t border-gray-700 hidden">
+            <h2 class="text-xl font-semibold mb-3 text-center">Final Results (Ah and mAh):</h2>
+            
+            <!-- Total Consumption Ah/mAh --><div id="cTotalBox"
+                 class="result-box bg-blue-600 text-center p-4 rounded-xl text-white font-bold text-lg shadow-lg mb-4">
+                <span class="block text-sm text-blue-200">Total Consumption (Before Aging Factor 1.25)</span>
+                <span class="block text-5xl mb-1">
+                    <span id="cTotalAhValue">0.00</span> Ah
+                </span>
+                <span id="cTotalmAhValue" class="block text-lg font-medium text-blue-100 mt-1"> (0 mAh)</span>
+            </div>
+            
+            <!-- Cmin Result --><div id="cMinBox"
+                 class="result-box text-center p-4 rounded-xl text-white font-bold text-lg shadow-lg">
+                <span class="block text-sm text-green-200">Minimum Required Capacity </span>
+                <span class="block text-5xl mb-1">
+                    <span id="cMinAhValue">0.00</span> Ah
+                </span>
+                <span id="cMinValue" class="block text-lg font-medium text-green-100 mt-1"> (0 mAh)</span>
+            </div>
+
+            <!-- Copy Button --><button id="copyBtn"
+                    class="w-full mt-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-semibold text-base rounded-lg transition duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50">
+                Copy Final Results
+            </button>
+            <!-- End of Copy Button --><!-- Message Box for error handling --><div id="messageBox" class="text-center mt-4 text-sm text-red-400 hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('calculateBtn').addEventListener('click', calculateBatteryCapacity);
+        document.getElementById('copyBtn').addEventListener('click', copyResults);
+
+        function copyResults() {
+            // Get the calculated values
+            const cTotalAh = document.getElementById('cTotalAhValue').textContent;
+            const cTotalmAh = document.getElementById('cTotalmAhValue').textContent.replace(/[()]/g, ''); // Remove parentheses
+            const cMinAh = document.getElementById('cMinAhValue').textContent;
+            const cMinmAh = document.getElementById('cMinValue').textContent.replace(/[()]/g, ''); // Remove parentheses
+            const copyBtn = document.getElementById('copyBtn');
+
+            // Construct the formatted text string
+            const textToCopy = 
+                `--- Battery Capacity Results ---\n` +
+                `Required Consumption (Before Aging): ${cTotalAh} Ah ${cTotalmAh}\n` +
+                `Minimum Required Capacity (Cmin): ${cMinAh} Ah ${cMinmAh}\n` +
+                `--------------------------------`;
+
+            // Use the temporary textarea method for reliable copying in sandbox environments
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed'; 
+            textarea.style.opacity = 0;
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    // Provide visual feedback
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'Copied to Clipboard! 🎉';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                    }, 1500);
+                } else {
+                    console.error('Copy failed using execCommand');
+                }
+            } catch (err) {
+                console.error('Could not copy text: ', err);
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+        function calculateBatteryCapacity() {
+            // Input elements
+            const I1Input = document.getElementById('quiescent_current');
+            const T1Input = document.getElementById('standby_time');
+            const I2Input = document.getElementById('alarm_current');
+            const T2Input = document.getElementById('alarm_time');
+            const DInput = document.getElementById('derating_factor');
+            
+            // Output elements
+            const resultContainer = document.getElementById('resultContainer');
+            const cTotalAhValueDisplay = document.getElementById('cTotalAhValue');
+            const cTotalmAhValueDisplay = document.getElementById('cTotalmAhValue');
+            const cMinAhValueDisplay = document.getElementById('cMinAhValue');
+            const cMinValueDisplay = document.getElementById('cMinValue');
+            const messageBox = document.getElementById('messageBox');
+
+            // Clear previous messages and state
+            messageBox.textContent = '';
+            messageBox.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+
+            const I1 = parseFloat(I1Input.value); // Standby Current (mA)
+            const T1 = parseFloat(T1Input.value); // Standby Time (Hours)
+            const I2 = parseFloat(I2Input.value); // Alarm Current (mA)
+            const T2 = parseFloat(T2Input.value); // Alarm Time (Hours)
+            let D = parseFloat(DInput.value);      // Derating Factor (unitless)
+            
+            const AGING_FACTOR = 1.25;
+
+            // 1. Input Validation
+            if (isNaN(I1) || I1 < 0 || isNaN(T1) || T1 <= 0 || isNaN(I2) || I2 < 0 || isNaN(T2) || T2 < 0) {
+                messageBox.textContent = 'Please enter valid, non-negative numbers for all time and current values.';
+                messageBox.classList.remove('hidden');
+                return;
+            }
+
+            // Handle Derating Factor fallback
+            if (isNaN(D) || D <= 0) {
+                D = 1.75; 
+            }
+
+            try {
+                // Convert current from milliAmps (mA) to Amps (A) for calculation
+                const I1_A = I1 / 1000;
+                const I2_A = I2 / 1000;
+
+                // Step 1: Calculate the standby portion (Ah)
+                // Result A1 = I1(A) * T1(h)
+                const standbyAh = I1_A * T1; // Ah
+
+                // Step 2: Calculate the alarm portion (Ah) with Derating Factor (D)
+                // Result A2 = D * I2(A) * T2(h)
+                const alarmAhDerated = D * I2_A * T2; // Ah
+
+                // Step 3a: Combine for Total Consumption (Ah)
+                // Total Consumption = A1 + A2
+                const totalConsumptionAh = standbyAh + alarmAhDerated;
+                
+                // Step 3b: Apply the Aging Factor (1.25) to get Cmin
+                // Cmin_Ah = Total Consumption * 1.25
+                const Cmin_Ah = totalConsumptionAh * AGING_FACTOR;
+                
+                // Final Unit Conversions
+                const Cmin_mAh = Cmin_Ah * 1000;
+                const totalConsumption_mAh = totalConsumptionAh * 1000;
+
+                // 4. Update UI
+                // Total Consumption Results
+                cTotalAhValueDisplay.textContent = totalConsumptionAh.toFixed(2);
+                cTotalmAhValueDisplay.textContent = `(${totalConsumption_mAh.toFixed(0)} mAh)`;
+
+                // Cmin Results
+                cMinAhValueDisplay.textContent = Cmin_Ah.toFixed(2);
+                cMinValueDisplay.textContent = `(${Cmin_mAh.toFixed(0)} mAh)`;
+                
+                resultContainer.classList.remove('hidden');
+
+            } catch (error) {
+                // Display error if something goes wrong
+                console.error("Calculation Error:", error);
+                messageBox.textContent = 'An unexpected error occurred during calculation. Please check your inputs.';
+                messageBox.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
